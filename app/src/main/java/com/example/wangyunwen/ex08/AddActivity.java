@@ -63,6 +63,7 @@ public class AddActivity extends AppCompatActivity {
             if(name.equals(nameTemp))
                 f = true;
         }
+        cursor.close();
         return f;
     }
 }

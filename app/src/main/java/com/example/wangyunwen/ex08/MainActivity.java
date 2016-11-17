@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.ContactsContract;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -72,6 +73,32 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    public String getPhoneNum(String name) {
+        String result = "";
+        Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI,
+                null, null, null, null);
+        //cursor.moveToFirst();
+        while (cursor.moveToNext()) {
+            // 获得联系人的ID号
+            int idColumn = cursor.getColumnIndex(ContactsContract.Contacts._ID);
+            String contactId = cursor.getString(idColumn);
+            //获取联系人的名字
+            String contactName = cursor.getString(cursor.getColumnIndex
+                    (ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+            if(name.equals(contactName)) {
+                Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=" + contactId, null, null);
+                while (c.moveToNext()) {
+                    result +=
+                            c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)) + "  ";
+                }
+                c.close();
+            }
+        }
+        cursor.close();
+        return result;
+    }
+
     public AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             View view1 = LayoutInflater.from(MainActivity.this).inflate(R.layout.dialog_layout, null);
@@ -83,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
             setBirthday.setText(mMap.get("birthday").toString());
             final EditText setPresent = (EditText) view1.findViewById(R.id.setPresent);
             setPresent.setText(mMap.get("present").toString());
+
+            TextView phoneNum = (TextView) view1.findViewById(R.id.phoneNum);
+            Log.d("=========",getPhoneNum(mMap.get("name").toString()));
+            phoneNum.setText(getPhoneNum(mMap.get("name").toString()));
 
             Dialog dialog = new AlertDialog.Builder(MainActivity.this)
                     .setTitle("编辑信息")
@@ -171,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
                 new String[] {"name", "birthday", "present"}, new int[] {R.id.name, R.id.birthday, R.id.present});
         list.setAdapter(simpleAdapter);
 
+        cursor.close();
         db.close();
     }
 }
